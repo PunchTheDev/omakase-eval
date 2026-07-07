@@ -13,9 +13,37 @@ import time
 GENESIS = "0" * 64
 
 
+def _numstr(x: float | int) -> str:
+    """Language-neutral number form so a JS reader reproduces the digest exactly.
+
+    Integer-valued numbers drop the decimal; others use fixed 12-decimal
+    notation (no sci, no int/float ambiguity). Mirrors `numstr` in the
+    dashboard's data.ts — keep the two in lockstep.
+    """
+    if x == int(x) and abs(x) < 1e15:
+        return str(int(x))
+    return format(x, ".12f").rstrip("0").rstrip(".")
+
+
+def _canonical(v: object) -> str:
+    if v is None:
+        return "null"
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        return _numstr(v)
+    if isinstance(v, str):
+        return json.dumps(v, ensure_ascii=False)
+    if isinstance(v, list):
+        return "[" + ",".join(_canonical(x) for x in v) + "]"
+    if isinstance(v, dict):
+        return "{" + ",".join(f"{json.dumps(k)}:{_canonical(v[k])}" for k in sorted(v)) + "}"
+    raise TypeError(f"uncanonicalizable {type(v)}")
+
+
 def _digest(entry: dict) -> str:
     body = {k: v for k, v in entry.items() if k != "sha"}
-    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return hashlib.sha256(_canonical(body).encode()).hexdigest()
 
 
 def read(path: str) -> list[dict]:
