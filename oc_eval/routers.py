@@ -111,13 +111,16 @@ def sha256_file(path: str) -> str:
 
 def load_router(manifest_path: str, weights_dir: str) -> TinyRouter:
     """Load a submission: verify declared sha256 and size cap, then construct the router."""
+    import os
+
     with open(manifest_path) as f:
         manifest = json.load(f)
     if manifest["arch"] != "tiny-linear":
         raise ValueError(f"unknown arch {manifest['arch']!r}")
-    path = f"{weights_dir}/{manifest['weights_file']}"
-    import os
-
+    name = manifest["weights_file"]
+    if os.path.basename(name) != name:
+        raise ValueError("weights_file must be a bare filename inside the submission dir")
+    path = os.path.join(weights_dir, name)
     if os.path.getsize(path) > MAX_WEIGHTS_BYTES:
         raise ValueError("weights exceed the tiny-class size cap")
     digest = sha256_file(path)

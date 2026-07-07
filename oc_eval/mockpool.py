@@ -9,6 +9,15 @@ do against a real pinned pool at temperature 0.
 The request must carry {"metadata": {"split","seed","task_id"}} (the engine
 sends it); the server regenerates the task and answers correctly iff
 hash(worker, task) falls under the worker's skill for that suite.
+
+TRUST BOUNDARY: this mock *encodes ground truth*, so it is necessarily an
+answer oracle — a hostile harness that probes it (crafted verifier drafts,
+candidate sweeps) can recover answers. That is acceptable only because the mock
+is a trusted maintainer-run dev/CI component. Production replaces it with a real
+pinned LLM pool that has no answer key, reached over an attested egress
+allow-list; the OC-H v2 contract (redacted views, central grading/metering) and
+the Gate-3 answer-reconstruction ban are the defenses that carry to production.
+Never point a competition's *scoring* pool at this server.
 """
 from __future__ import annotations
 
@@ -49,6 +58,11 @@ def _wrong_answer(worker: str, task: suites.Task) -> str:
 
 def respond(model: str, body: dict) -> str:
     meta = body.get("metadata") or {}
+    if model not in SKILLS:
+        raise ValueError(f"unknown worker {model!r}")
+    for key in ("split", "seed", "task_id"):
+        if key not in meta:
+            raise ValueError(f"metadata missing {key!r}")
     task = suites.task_by_id(meta["split"], int(meta["seed"]), meta["task_id"])
     if knows(model, task):
         answer = task.answer
@@ -59,7 +73,8 @@ def respond(model: str, body: dict) -> str:
             answer = f"possibly: {answer}"
     role = "verifier" if re.search(r"verif", body["messages"][0]["content"], re.I) else "worker"
     if role == "verifier":  # verifiers judge the draft in the user message against their own belief
-        draft = body["messages"][1]["content"].strip().splitlines()[-1]
+        lines = body["messages"][1]["content"].strip().splitlines()
+        draft = lines[-1] if lines else ""
         return "CORRECT" if (task.answer in draft) == knows(model, task) else "REVISE"
     return answer
 
