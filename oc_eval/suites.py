@@ -72,6 +72,14 @@ def _gen_code_qa(rng: random.Random, tid: str) -> Task:
 _GENERATORS = {"reasoning": _gen_reasoning, "math": _gen_math, "code_qa": _gen_code_qa}
 
 
+def task_by_id(split: str, seed: int, tid: str) -> Task:
+    """Reconstruct one task from its id — generation is a pure function of (split, seed, suite, i)."""
+    prefix, suite, idx = tid.rsplit("-", 2)
+    if prefix != split or suite not in _GENERATORS:
+        raise ValueError(f"task id {tid!r} does not belong to split {split!r}")
+    return _GENERATORS[suite](_rng(split, seed, suite, int(idx)), tid)
+
+
 def generate_split(split: str, seed: int, per_suite: int = 40) -> list[Task]:
     tasks = []
     for suite in SUITES:
