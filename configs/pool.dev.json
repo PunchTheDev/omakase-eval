@@ -1,0 +1,10 @@
+{
+  "timeout_s": 30,
+  "workers": [
+    {"id": "reasoner-mock", "model": "reasoner-mock", "base_url": "http://127.0.0.1:8100", "cost_per_1k": 1.0},
+    {"id": "coder-mock", "model": "coder-mock", "base_url": "http://127.0.0.1:8100", "cost_per_1k": 0.9},
+    {"id": "math-mock", "model": "math-mock", "base_url": "http://127.0.0.1:8100", "cost_per_1k": 0.8},
+    {"id": "generalist-mock", "model": "generalist-mock", "base_url": "http://127.0.0.1:8100", "cost_per_1k": 0.7},
+    {"id": "small-mock", "model": "small-mock", "base_url": "http://127.0.0.1:8100", "cost_per_1k": 0.1}
+  ]
+}
