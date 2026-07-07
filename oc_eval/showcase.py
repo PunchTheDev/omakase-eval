@@ -13,9 +13,11 @@ from .workers import Pool
 
 
 def run(champion_router, champion_name: str, contenders: Pool, pool: Pool,
-        split: str, seed: int) -> dict:
+        split: str, seed: int, run_task=engine.run_task) -> dict:
+    """run_task defaults to the reference engine; pass the champion harness's to showcase the full stack."""
     tasks = suites.generate_split(split, seed)
-    bars = {champion_name: _axes(engine.run_split(champion_router, tasks, pool, seed, split))}
+    stack = [run_task(champion_router, t, pool, seed, split) for t in tasks]
+    bars = {champion_name: _axes(stack)}
     for worker_id in contenders.workers:
         results = engine.run_split(SingleWorkerRouter(worker_id), tasks, contenders, seed, split)
         bars[worker_id] = _axes(results)
