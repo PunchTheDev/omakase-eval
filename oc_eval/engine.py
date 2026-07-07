@@ -5,7 +5,7 @@ OC-H miners evolve. Budgets are enforced here, not trusted to the router.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from . import suites, templates
 from .actions import Answer, Call
@@ -41,10 +41,11 @@ def run_task(router, task: suites.Task, pool: Pool, run_seed: int, split: str, b
     result = TaskResult(task.id, task.suite, correct=False)
     prompt = suites.render_prompt(task, run_seed)
     metadata = {"split": split, "seed": run_seed, "task_id": task.id}
+    redacted = replace(task, answer="")  # the policy never sees the answer
     draft: str | None = None
 
     for _ in range(budget.max_turns):
-        action = router.decide(task=task, prompt=prompt, steps=result.steps)
+        action = router.decide(task=redacted, prompt=prompt, steps=result.steps)
         if isinstance(action, Answer):
             result.answer = action.final
             break
