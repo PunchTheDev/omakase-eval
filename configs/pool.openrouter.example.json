@@ -1,0 +1,11 @@
+{
+  "$comment": "Real pool via OpenRouter (OpenAI-compatible). Set OPENROUTER_API_KEY in env; never put the key here. Pin exact model revisions. Pick complementary specialists.",
+  "timeout_s": 120,
+  "workers": [
+    {"id": "reasoner", "model": "deepseek/deepseek-r1", "base_url": "https://openrouter.ai/api", "cost_per_1k": 1.0, "api_key_env": "OPENROUTER_API_KEY"},
+    {"id": "coder", "model": "qwen/qwen3-coder", "base_url": "https://openrouter.ai/api", "cost_per_1k": 0.9, "api_key_env": "OPENROUTER_API_KEY"},
+    {"id": "knowledge", "model": "meta-llama/llama-4-maverick", "base_url": "https://openrouter.ai/api", "cost_per_1k": 1.1, "api_key_env": "OPENROUTER_API_KEY"},
+    {"id": "long-context", "model": "moonshotai/kimi-k2", "base_url": "https://openrouter.ai/api", "cost_per_1k": 1.0, "api_key_env": "OPENROUTER_API_KEY"},
+    {"id": "small-fast", "model": "meta-llama/llama-3.1-8b-instruct", "base_url": "https://openrouter.ai/api", "cost_per_1k": 0.1, "api_key_env": "OPENROUTER_API_KEY"}
+  ]
+}

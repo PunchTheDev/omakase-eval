@@ -7,6 +7,7 @@ pinned vLLM cluster and Gate 4's egress allow-list is exactly this set.
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.request
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ class Worker:
     model: str
     base_url: str
     cost_per_1k: float  # relative cost units per 1k tokens
+    api_key_env: str = ""  # env var holding the Bearer token (OpenRouter/vLLM); empty = no auth (mock)
 
 
 @dataclass(frozen=True)
@@ -48,10 +50,13 @@ class Pool:
         }
         if metadata:
             body["metadata"] = metadata  # dev-only routing hints; real servers ignore extra fields
+        headers = {"Content-Type": "application/json"}
+        if w.api_key_env:  # real provider (OpenRouter, authed vLLM); key from env, never config
+            headers["Authorization"] = f"Bearer {os.environ[w.api_key_env]}"
         req = urllib.request.Request(
             f"{w.base_url}/v1/chat/completions",
             data=json.dumps(body).encode(),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
         )
         t0 = time.monotonic()
         with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:
