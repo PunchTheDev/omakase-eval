@@ -28,15 +28,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import suites
 
-SKILLS = {  # suite -> skill, deliberately complementary
-    "reasoner-mock": {"reasoning": 0.86, "math": 0.62, "code_qa": 0.60},
-    "coder-mock": {"reasoning": 0.62, "math": 0.58, "code_qa": 0.88},
-    "math-mock": {"reasoning": 0.62, "math": 0.86, "code_qa": 0.60},
-    "generalist-mock": {"reasoning": 0.72, "math": 0.70, "code_qa": 0.70},
-    "small-mock": {"reasoning": 0.48, "math": 0.48, "code_qa": 0.48},
+_DEFAULT = 0.55
+SKILLS = {  # suite -> skill, deliberately complementary (dev only)
+    "reasoner-mock": {"reasoning": 0.86, "logic": 0.82, "math": 0.62, "code_qa": 0.60, "number_theory": 0.60},
+    "coder-mock": {"code_qa": 0.88, "logic": 0.70, "reasoning": 0.62, "math": 0.58, "number_theory": 0.66},
+    "math-mock": {"math": 0.86, "number_theory": 0.86, "reasoning": 0.62, "logic": 0.64, "code_qa": 0.60},
+    "generalist-mock": {"reasoning": 0.72, "math": 0.70, "code_qa": 0.70, "logic": 0.70, "number_theory": 0.70},
+    "small-mock": {s: 0.48 for s in ("reasoning", "math", "code_qa", "logic", "number_theory")},
     # closed-lab stand-ins, showcase only — never in a competition pool config
-    "lab-alpha-mock": {"reasoning": 0.82, "math": 0.82, "code_qa": 0.82},
-    "lab-beta-mock": {"reasoning": 0.78, "math": 0.78, "code_qa": 0.78},
+    "lab-alpha-mock": {s: 0.82 for s in ("reasoning", "math", "code_qa", "logic", "number_theory")},
+    "lab-beta-mock": {s: 0.78 for s in ("reasoning", "math", "code_qa", "logic", "number_theory")},
 }
 
 HEDGE_RATE = 0.5  # an ignorant worker hedges half the time — the confidence
@@ -45,7 +46,7 @@ HEDGE_RATE = 0.5  # an ignorant worker hedges half the time — the confidence
 
 def knows(worker: str, task: suites.Task) -> bool:
     h = hashlib.sha256(f"{worker}|{task.id}".encode()).digest()
-    return int.from_bytes(h[:4], "big") / 2**32 < SKILLS[worker][task.suite]
+    return int.from_bytes(h[:4], "big") / 2**32 < SKILLS[worker].get(task.suite, _DEFAULT)
 
 
 def _wrong_answer(worker: str, task: suites.Task) -> str:

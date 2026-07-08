@@ -44,8 +44,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     results = engine.run_split(router, tasks, pool, args.seed, args.split)
     # King-of-the-hill: beat the current champion if one exists, else the best-single floor.
     runs_dir = os.path.dirname(args.baselines) or "."
+    has_champion = os.path.exists(bl.champion_path(runs_dir))
     incumbent = bl.load_incumbent(runs_dir, bl.deserialize_results(base.best_single_results))
-    verdict = score.judge(results, incumbent, base.oracle_accuracy)
+    verdict = score.judge(results, incumbent, base.oracle_accuracy, gate_cost=has_champion)
 
     blob = {
         "manifest_sha256": routers.sha256_file(args.manifest),
@@ -83,6 +84,17 @@ def cmd_verify_log(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_benchmarks(args: argparse.Namespace) -> int:
+    from . import rounds
+
+    desc = rounds.descriptor(rounds.load_config(args.round))
+    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+    with open(args.out, "w") as f:
+        json.dump(desc, f, indent=1)
+    print(f"wrote benchmark descriptor: {len(desc['suites'])} suites → {args.out}")
+    return 0
+
+
 def _mde(n: int) -> float:
     from .stats import minimum_detectable_effect
 
@@ -118,6 +130,11 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("verify-log", help="verify a frontier log's hash chain")
     s.add_argument("path")
     s.set_defaults(fn=cmd_verify_log)
+
+    s = sub.add_parser("benchmarks", help="emit the public benchmark descriptor for the dashboard")
+    s.add_argument("--round", required=True)
+    s.add_argument("--out", required=True)
+    s.set_defaults(fn=cmd_benchmarks)
 
     args = p.parse_args(argv)
     return args.fn(args)

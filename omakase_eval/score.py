@@ -57,8 +57,16 @@ class Verdict:
 
 
 def judge(candidate: list[TaskResult], baseline: list[TaskResult],
-          oracle_accuracy: float | None = None) -> Verdict:
-    """Pass iff accuracy improves with significance and cost/latency stay in band."""
+          oracle_accuracy: float | None = None, gate_cost: bool = True) -> Verdict:
+    """Pass iff accuracy improves with significance and cost stays in band.
+
+    `gate_cost` compares candidate cost vs. the incumbent — fair when the
+    incumbent is itself a router (a reigning champion). At genesis the incumbent
+    is a *single* worker (the accuracy floor), so cost-gating would punish
+    routing to specialists for accuracy — the whole point of the pool. Punch
+    sets gate_cost=False there and the first champion is judged on accuracy
+    alone. Latency is reported but never gated (transport jitter on a served pool).
+    """
     cand_axes, base_axes = axes(candidate), axes(baseline)
     cmp_ = stats.compare(correctness_vector(candidate), correctness_vector(baseline))
 
@@ -66,12 +74,8 @@ def judge(candidate: list[TaskResult], baseline: list[TaskResult],
     if oracle_accuracy is not None and oracle_accuracy > base_axes.accuracy:
         capture = (cand_axes.accuracy - base_axes.accuracy) / (oracle_accuracy - base_axes.accuracy)
 
-    # Gated axes: accuracy (paired significance) + cost (deterministic worker
-    # tokens). Latency is reported in the axes but not gated — against a served
-    # pool it's dominated by transport/queue jitter, so gating on it would fail
-    # honest routers for noise; cost is the deterministic efficiency signal.
     if not cmp_.significant:
         return Verdict(False, "accuracy gain not significant", cmp_, cand_axes, base_axes, capture)
-    if cand_axes.cost_per_task > base_axes.cost_per_task * COST_TOLERANCE:
+    if gate_cost and cand_axes.cost_per_task > base_axes.cost_per_task * COST_TOLERANCE:
         return Verdict(False, "cost regression beyond tolerance", cmp_, cand_axes, base_axes, capture)
     return Verdict(True, "significant accuracy gain within cost band", cmp_, cand_axes, base_axes, capture)

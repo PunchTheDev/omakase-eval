@@ -5,7 +5,8 @@ def test_split_is_deterministic():
     a = suites.generate_split("dev", 1)
     b = suites.generate_split("dev", 1)
     assert a == b
-    assert len(a) == 120 and len({t.id for t in a}) == 120
+    n = len(suites.SUITES) * 40
+    assert len(a) == n and len({t.id for t in a}) == n
 
 
 def test_different_seeds_differ():

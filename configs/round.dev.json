@@ -1,0 +1,8 @@
+{
+  "$comment": "Round composition. dev split is public (self-score); gate split uses a private rotation seed. Tune counts/mix so best-single ≈ 55-75%.",
+  "name": "gate-v1",
+  "sources": [
+    {"kind": "procedural", "suites": ["reasoning", "math", "code_qa", "logic", "number_theory"], "per_suite": 40}
+  ],
+  "$holdout_todo": {"kind": "jsonl", "name": "knowledge-holdout", "dev_path": "data/knowledge.dev.jsonl", "gate_path": "data/knowledge.gate.jsonl", "count": 200, "note": "phase 2: GPQA-D / MMLU-Pro hard, hidden private slice"}
+}
