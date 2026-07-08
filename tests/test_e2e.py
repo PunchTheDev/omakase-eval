@@ -1,6 +1,6 @@
 """End-to-end: baselines → trained tiny router → verdict. The whole competition loop."""
-from oc_eval import baselines as bl
-from oc_eval import engine, routers, score, suites
+from omakase_eval import baselines as bl
+from omakase_eval import engine, routers, score, suites
 
 
 def _train_router(pool, base: bl.Baselines, split: str, seed: int) -> routers.TinyRouter:

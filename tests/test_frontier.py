@@ -1,6 +1,6 @@
 import json
 
-from oc_eval import frontier
+from omakase_eval import frontier
 
 
 def test_chain_appends_and_verifies(tmp_path):

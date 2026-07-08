@@ -1,6 +1,6 @@
-from oc_eval import engine, suites
-from oc_eval.actions import Answer, Call
-from oc_eval.routers import SingleWorkerRouter
+from omakase_eval import engine, suites
+from omakase_eval.actions import Answer, Call
+from omakase_eval.routers import SingleWorkerRouter
 
 TASKS = suites.generate_split("dev", 1)[:12]
 

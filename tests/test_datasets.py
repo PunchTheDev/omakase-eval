@@ -1,4 +1,4 @@
-from oc_eval import datasets, suites
+from omakase_eval import datasets, suites
 
 
 def test_jsonl_roundtrips_to_tasks(tmp_path):

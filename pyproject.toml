@@ -3,14 +3,14 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "oc-eval"
+name = "omakase-eval"
 version = "0.1.0"
 description = "Evaluation infrastructure for the OC orchestration competitions (OC-R / OC-H)."
 requires-python = ">=3.11"
 dependencies = []
 
 [project.scripts]
-oc-eval = "oc_eval.cli:main"
+omakase-eval = "omakase_eval.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["oc_eval*"]
+include = ["omakase_eval*"]

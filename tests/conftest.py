@@ -2,8 +2,8 @@ import threading
 
 import pytest
 
-from oc_eval import mockpool
-from oc_eval.workers import Pool, Worker
+from omakase_eval import mockpool
+from omakase_eval.workers import Pool, Worker
 
 WORKER_IDS = list(mockpool.SKILLS)
 

@@ -1,4 +1,4 @@
-from oc_eval import stats
+from omakase_eval import stats
 
 
 def test_mcnemar_null():

@@ -1,6 +1,6 @@
-# oc-eval
+# omakase-eval
 
-Evaluation infrastructure for the OC orchestration competitions ([OC-R](../oc-router), [OC-H](../oc-harness)).
+Evaluation infrastructure for the OC orchestration competitions ([OC-R](../omakase-router), [OC-H](../omakase-harness)).
 Zero runtime dependencies — everything below is stdlib Python, which keeps the
 digest-pinned runtime image minimal and auditable.
 
@@ -24,9 +24,9 @@ digest-pinned runtime image minimal and auditable.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # or just `pip install -e .`
-.venv/bin/oc-eval mockpool --port 8100 &                      # dev worker pool
-.venv/bin/oc-eval baselines --pool configs/pool.dev.json --out runs/baselines.dev.json
-.venv/bin/oc-eval run --manifest ../oc-router/submission/manifest.json \
+.venv/bin/omakase-eval mockpool --port 8100 &                      # dev worker pool
+.venv/bin/omakase-eval baselines --pool configs/pool.dev.json --out runs/baselines.dev.json
+.venv/bin/omakase-eval run --manifest ../omakase-router/submission/manifest.json \
     --pool configs/pool.dev.json --baselines runs/baselines.dev.json \
     --frontier runs/frontier.jsonl
 ```

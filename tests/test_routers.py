@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from oc_eval import routers
+from omakase_eval import routers
 
 
 def _write_submission(tmp_path, weights_file="weights.json", arch="tiny-linear", corrupt=False):

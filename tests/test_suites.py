@@ -1,4 +1,4 @@
-from oc_eval import suites
+from omakase_eval import suites
 
 
 def test_split_is_deterministic():

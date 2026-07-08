@@ -1,4 +1,4 @@
-"""oc-eval CLI — the maintainer's (and miners' self-score) entry point."""
+"""omakase-eval CLI — the maintainer's (and miners' self-score) entry point."""
 from __future__ import annotations
 
 import argparse
@@ -57,7 +57,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     }
     # Persist the full per-task runtime log next to the run — the auditable trust artifact.
     tx = transcripts.build(tasks, results, args.seed,
-                           header={"competition": "oc-router", "manifest_sha256": blob["manifest_sha256"],
+                           header={"competition": "omakase-router", "manifest_sha256": blob["manifest_sha256"],
                                    "split": args.split, "seed": args.seed})
     tx_dir = args.transcripts or (os.path.join(os.path.dirname(args.out), "transcripts") if args.out else "runs/transcripts")
     blob["transcript_sha256"] = transcripts.write(tx, tx_dir)
@@ -90,7 +90,7 @@ def _mde(n: int) -> float:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="oc-eval", description=__doc__)
+    p = argparse.ArgumentParser(prog="omakase-eval", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("mockpool", help="serve the deterministic dev worker pool")

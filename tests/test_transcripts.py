@@ -1,13 +1,13 @@
-from oc_eval import baselines as bl
-from oc_eval import engine, suites, transcripts
-from oc_eval.routers import SingleWorkerRouter
+from omakase_eval import baselines as bl
+from omakase_eval import engine, suites, transcripts
+from omakase_eval.routers import SingleWorkerRouter
 
 TASKS = suites.generate_split("dev", 1)[:10]
 
 
 def test_transcript_captures_steps_and_is_content_addressed(pool, tmp_path):
     results = engine.run_split(SingleWorkerRouter("generalist-mock"), TASKS, pool, 1, "dev")
-    tx = transcripts.build(TASKS, results, 1, header={"competition": "oc-router"})
+    tx = transcripts.build(TASKS, results, 1, header={"competition": "omakase-router"})
 
     assert len(tx["tasks"]) == len(TASKS)
     rec = tx["tasks"][0]
