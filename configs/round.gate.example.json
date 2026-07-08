@@ -1,0 +1,8 @@
+{
+  "$comment": "Production gate composition. Procedural backbone + hidden knowledge holdout. Punch runs this on the private gate split with a secret rotation seed; the dev split (same config) is public. Tune per_suite/count so best-single ≈ 55-75%.",
+  "name": "gate-v1",
+  "sources": [
+    {"kind": "procedural", "suites": ["reasoning", "math", "code_qa", "logic", "number_theory"], "per_suite": 60},
+    {"kind": "jsonl", "name": "knowledge-holdout", "pool": "data/knowledge.pool.jsonl", "count": 100, "note": "expand pool via scripts/fetch_knowledge.py (MMLU-Pro)"}
+  ]
+}

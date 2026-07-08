@@ -36,9 +36,9 @@ def build_split(config: dict, split: str, seed: int) -> list[suites.Task]:
                 split, seed, per_suite=src.get("per_suite", 40),
                 suites=tuple(src.get("suites", suites.SUITES)))
         elif src["kind"] == "jsonl":
-            # public dev uses the published dev file; gate uses the private holdout
-            path = src["dev_path"] if split == "dev" else src["gate_path"]
-            tasks += datasets.load_jsonl(path)
+            # hidden-subset holdout: sample n items from a public pool by (split, seed).
+            # The pool is public; the per-round subset is a secret function of the seed.
+            tasks += datasets.sample_jsonl(src["pool"], split, seed, src.get("count", 100))
         else:
             raise ValueError(f"unknown source kind {src['kind']!r}")
     return tasks
@@ -58,9 +58,9 @@ def descriptor(config: dict) -> dict:
                              "per_split": src.get("per_suite", 40),
                              "ungameable": "fresh params each round — nothing to memorize"})
         else:
-            rows.append({"suite": src.get("name", "knowledge-holdout"), "source": "jsonl",
+            rows.append({"suite": src.get("name", "knowledge-holdout"), "source": "hidden-holdout",
                          "graded": "objective", "per_split": src.get("count", "—"),
-                         "ungameable": "private hidden slice, rotated + retired each round"})
+                         "ungameable": "secret per-round subset of a public pool — needs the whole distribution, not a fixed slice"})
     return {
         "name": config.get("name", "gate"),
         "structure": "public dev split (self-score) + private gate split (scores the crown, rotated each round)",

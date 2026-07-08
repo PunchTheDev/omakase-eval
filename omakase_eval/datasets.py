@@ -30,6 +30,26 @@ def load_jsonl(path: str) -> list[Task]:
     return tasks
 
 
+def sample_jsonl(path: str, split: str, seed: int, n: int) -> list[Task]:
+    """Hidden-subset holdout: draw n items from a public pool by (split, seed).
+
+    The pool file is public, but *which* items a round scores is a secret
+    function of the gate seed — so acing a round requires handling the whole
+    distribution, not memorizing a fixed slice (the Kaggle private-leaderboard
+    property). dev and gate draw disjoint-ish subsets; retired gate seeds are
+    published so yesterday's holdout becomes training data.
+    """
+    import hashlib
+    import random
+
+    pool = load_jsonl(path)
+    rng = random.Random(int.from_bytes(hashlib.sha256(f"{path}|{split}|{seed}".encode()).digest()[:8], "big"))
+    picked = rng.sample(pool, min(n, len(pool)))
+    # re-id so the split/seed provenance is in the task id (grading is content-based)
+    return [Task(f"{split}-{t.suite}-{i:04d}", t.suite, t.prompt, t.options, t.answer, meta=t.meta)
+            for i, t in enumerate(picked)]
+
+
 def load_split(source: dict, split: str, seed: int, per_suite: int = 40) -> list[Task]:
     """Unified entry point. source = {'kind':'procedural'} or {'kind':'jsonl','path':...}.
 
