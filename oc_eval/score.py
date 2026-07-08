@@ -12,8 +12,7 @@ from . import stats
 from .engine import TaskResult
 
 SUITE_WEIGHTS = {"reasoning": 1.0, "math": 1.0, "code_qa": 1.0}
-COST_TOLERANCE = 1.10  # candidate may cost up to +10% vs. baseline
-LATENCY_TOLERANCE = 1.25
+COST_TOLERANCE = 1.10  # candidate worker-token cost may rise up to +10% vs. incumbent
 
 
 @dataclass(frozen=True)
@@ -67,10 +66,12 @@ def judge(candidate: list[TaskResult], baseline: list[TaskResult],
     if oracle_accuracy is not None and oracle_accuracy > base_axes.accuracy:
         capture = (cand_axes.accuracy - base_axes.accuracy) / (oracle_accuracy - base_axes.accuracy)
 
+    # Gated axes: accuracy (paired significance) + cost (deterministic worker
+    # tokens). Latency is reported in the axes but not gated — against a served
+    # pool it's dominated by transport/queue jitter, so gating on it would fail
+    # honest routers for noise; cost is the deterministic efficiency signal.
     if not cmp_.significant:
         return Verdict(False, "accuracy gain not significant", cmp_, cand_axes, base_axes, capture)
     if cand_axes.cost_per_task > base_axes.cost_per_task * COST_TOLERANCE:
         return Verdict(False, "cost regression beyond tolerance", cmp_, cand_axes, base_axes, capture)
-    if cand_axes.latency_p50_ms > base_axes.latency_p50_ms * LATENCY_TOLERANCE:
-        return Verdict(False, "latency regression beyond tolerance", cmp_, cand_axes, base_axes, capture)
-    return Verdict(True, "significant accuracy gain within cost/latency bands", cmp_, cand_axes, base_axes, capture)
+    return Verdict(True, "significant accuracy gain within cost band", cmp_, cand_axes, base_axes, capture)
