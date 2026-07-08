@@ -1,0 +1,11 @@
+{
+  "$comment": "Production pool: point base_url at your pinned vLLM/served endpoints. The client is the same OpenAI-compatible one the mock uses — swap the config, not the code. Gate 4's egress allow-list is exactly this set of hosts.",
+  "timeout_s": 120,
+  "workers": [
+    {"id": "reasoner", "model": "deepseek-ai/DeepSeek-R1", "base_url": "http://vllm-reasoner:8000", "cost_per_1k": 1.0},
+    {"id": "coder", "model": "Qwen/Qwen3-Coder-32B", "base_url": "http://vllm-coder:8000", "cost_per_1k": 0.9},
+    {"id": "knowledge", "model": "meta-llama/Llama-4-70B", "base_url": "http://vllm-knowledge:8000", "cost_per_1k": 1.1},
+    {"id": "long-context", "model": "moonshotai/Kimi-Instruct", "base_url": "http://vllm-longctx:8000", "cost_per_1k": 1.0},
+    {"id": "small-fast", "model": "meta-llama/Llama-3.1-8B", "base_url": "http://vllm-small:8000", "cost_per_1k": 0.1}
+  ]
+}
