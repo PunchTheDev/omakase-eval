@@ -7,7 +7,7 @@ import os
 import sys
 
 from . import baselines as bl
-from . import engine, frontier, mockpool, routers, score, suites
+from . import engine, frontier, mockpool, routers, score, suites, transcripts
 from .workers import Pool
 
 
@@ -52,12 +52,19 @@ def cmd_run(args: argparse.Namespace) -> int:
         "verdict": verdict.to_dict(),
         "mde": _mde(len(tasks)),
     }
+    # Persist the full per-task runtime log next to the run — the auditable trust artifact.
+    tx = transcripts.build(tasks, results, args.seed,
+                           header={"competition": "oc-router", "manifest_sha256": blob["manifest_sha256"],
+                                   "split": args.split, "seed": args.seed})
+    tx_dir = args.transcripts or (os.path.join(os.path.dirname(args.out), "transcripts") if args.out else "runs/transcripts")
+    blob["transcript_sha256"] = transcripts.write(tx, tx_dir)
+    blob["task_summary"] = transcripts.summarize(tx)
     if args.out:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
         with open(args.out, "w") as f:
             json.dump(blob, f, indent=1)
     if args.frontier:
-        frontier.append(args.frontier, "run", blob)
+        frontier.append(args.frontier, "run", {k: v for k, v in blob.items() if k != "task_summary"})
 
     v = verdict
     print(f"accuracy {v.candidate.accuracy:.3f} vs best-single {v.baseline.accuracy:.3f} "
@@ -102,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--seed", type=int, default=1)
     s.add_argument("--out")
     s.add_argument("--frontier")
+    s.add_argument("--transcripts", help="dir for the content-addressed per-task transcript")
     s.set_defaults(fn=cmd_run)
 
     s = sub.add_parser("verify-log", help="verify a frontier log's hash chain")
