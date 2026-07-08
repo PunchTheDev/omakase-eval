@@ -15,7 +15,7 @@ answer oracle — a hostile harness that probes it (crafted verifier drafts,
 candidate sweeps) can recover answers. That is acceptable only because the mock
 is a trusted maintainer-run dev/CI component. Production replaces it with a real
 pinned LLM pool that has no answer key, reached over an attested egress
-allow-list; the OC-H v2 contract (redacted views, central grading/metering) and
+allow-list; the Harness v2 contract (redacted views, central grading/metering) and
 the Gate-3 answer-reconstruction ban are the defenses that carry to production.
 Never point a competition's *scoring* pool at this server.
 """

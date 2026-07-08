@@ -1,4 +1,4 @@
-"""Locked role prompts. Part of the scoring function — miners cannot vary these in OC-R."""
+"""Locked role prompts. Part of the scoring function — miners cannot vary these in Router."""
 
 SYSTEM = {
     "thinker": (

@@ -43,6 +43,30 @@ def correctness_vector(results: list[TaskResult]) -> list[bool]:
     return [r.correct for r in sorted(results, key=lambda r: r.task_id)]
 
 
+def paired_correctness(candidate: list[TaskResult], baseline: list[TaskResult]) -> tuple[list[bool], list[bool]]:
+    """Align candidate and baseline by task_id before pairing.
+
+    McNemar + the paired bootstrap are only meaningful when position i of both
+    vectors is the *same* task. Sorting each side independently (as
+    `correctness_vector` does) silently pairs disjoint ids when the two runs
+    were scored on different splits/seeds — e.g. a rotated gate split vs. the dev
+    baseline. Refuse that instead of returning a garbage verdict: pair on the
+    shared id set and demand the sets match.
+    """
+    cand = {r.task_id: r.correct for r in candidate}
+    base = {r.task_id: r.correct for r in baseline}
+    if cand.keys() != base.keys():
+        unmatched = sorted(cand.keys() ^ base.keys())
+        raise ValueError(
+            f"paired comparison requires identical task ids on both sides; "
+            f"{len(unmatched)} unmatched (e.g. {unmatched[:3]}). Candidate and "
+            "baseline must be scored on the same split+seed — refusing to zip "
+            "disjoint vectors positionally."
+        )
+    ids = sorted(cand)
+    return [cand[i] for i in ids], [base[i] for i in ids]
+
+
 @dataclass(frozen=True)
 class Verdict:
     passed: bool
@@ -68,7 +92,8 @@ def judge(candidate: list[TaskResult], baseline: list[TaskResult],
     alone. Latency is reported but never gated (transport jitter on a served pool).
     """
     cand_axes, base_axes = axes(candidate), axes(baseline)
-    cmp_ = stats.compare(correctness_vector(candidate), correctness_vector(baseline))
+    cand_vec, base_vec = paired_correctness(candidate, baseline)
+    cmp_ = stats.compare(cand_vec, base_vec)
 
     capture = None
     if oracle_accuracy is not None and oracle_accuracy > base_axes.accuracy:

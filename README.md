@@ -1,6 +1,6 @@
 # omakase-eval
 
-Evaluation infrastructure for the OC orchestration competitions ([OC-R](../omakase-router), [OC-H](../omakase-harness)).
+Evaluation infrastructure for the Omakase orchestration competitions ([Router](../omakase-router), [Harness](../omakase-harness)).
 Zero runtime dependencies — everything below is stdlib Python, which keeps the
 digest-pinned runtime image minimal and auditable.
 

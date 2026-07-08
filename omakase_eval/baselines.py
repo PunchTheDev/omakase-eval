@@ -75,7 +75,7 @@ def deserialize_results(rows: list[dict]) -> list[engine.TaskResult]:
 
 # -- king-of-the-hill incumbent ---------------------------------------------
 # The crown is taken by beating the *current champion*, not just the best single
-# worker. The champion's scored results are cached here (like OC-H's main
+# worker. The champion's scored results are cached here (like Harness's main
 # baseline); at genesis there is no champion, so the best-single floor is used.
 
 def champion_path(runs_dir: str) -> str:

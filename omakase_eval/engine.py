@@ -1,7 +1,7 @@
 """The reference harness engine: a bounded turn loop that executes router actions.
 
-This file is locked in OC-R (it is the scoring function) and is the seed that
-OC-H miners evolve. Budgets are enforced here, not trusted to the router.
+This file is locked in Router (it is the scoring function) and is the seed that
+Harness miners evolve. Budgets are enforced here, not trusted to the router.
 """
 from __future__ import annotations
 

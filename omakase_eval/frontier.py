@@ -37,7 +37,12 @@ def _canonical(v: object) -> str:
     if isinstance(v, list):
         return "[" + ",".join(_canonical(x) for x in v) + "]"
     if isinstance(v, dict):
-        return "{" + ",".join(f"{json.dumps(k)}:{_canonical(v[k])}" for k in sorted(v)) + "}"
+        # ensure_ascii=False on keys too — matches this function's own string
+        # values (line above) AND the dashboard's JSON.stringify port in data.ts
+        # (which never escapes). Without it a non-ASCII payload key would digest
+        # differently on the two sides and silently fail the integrity/signature
+        # check. No committed key is non-ASCII, so this changes no existing hash.
+        return "{" + ",".join(f"{json.dumps(k, ensure_ascii=False)}:{_canonical(v[k])}" for k in sorted(v)) + "}"
     raise TypeError(f"uncanonicalizable {type(v)}")
 
 

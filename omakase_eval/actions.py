@@ -1,7 +1,7 @@
 """Action schema — the fixed contract between a router and the harness.
 
 A router never touches workers directly; it emits actions and the engine
-executes them. Keeping this surface minimal is what makes OC-R a policy
+executes them. Keeping this surface minimal is what makes Router a policy
 competition rather than a systems one.
 """
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Router implementations and the manifest loader.
 
 TinyRouter is the competition's seed architecture: hashed bag-of-words features
-into a linear policy over workers (~10K parameters, tinyrouter-scale). OC-R
+into a linear policy over workers (~10K parameters, tinyrouter-scale). Router
 submissions may use any architecture that satisfies the manifest contract; this
 one exists so the competition launches with a real, beatable champion.
 """
@@ -96,7 +96,7 @@ def fit_tiny_router(prompts: list[str], labels: list[int], workers: list[str],
     return TinyRouter(workers, [[x * norm for x in row] for row in acc])
 
 
-# -- manifest loading (the OC-R submission contract) ------------------------
+# -- manifest loading (the Router submission contract) ------------------------
 
 MAX_WEIGHTS_BYTES = 25_000_000  # tiny class: generous for JSON blobs, tiny for models
 
