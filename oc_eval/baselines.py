@@ -71,3 +71,34 @@ def load(path: str) -> Baselines:
 
 def deserialize_results(rows: list[dict]) -> list[engine.TaskResult]:
     return [engine.TaskResult(**{**row, "steps": []}) for row in rows]
+
+
+# -- king-of-the-hill incumbent ---------------------------------------------
+# The crown is taken by beating the *current champion*, not just the best single
+# worker. The champion's scored results are cached here (like OC-H's main
+# baseline); at genesis there is no champion, so the best-single floor is used.
+
+def champion_path(runs_dir: str) -> str:
+    import os
+
+    return os.path.join(runs_dir, "champion-baseline.json")
+
+
+def load_incumbent(runs_dir: str, floor_results: list[engine.TaskResult]) -> list[engine.TaskResult]:
+    import os
+
+    path = champion_path(runs_dir)
+    if not os.path.exists(path):
+        return floor_results  # genesis: must beat the best single worker
+    with open(path) as f:
+        return deserialize_results(json.load(f)["results"])
+
+
+def write_champion(runs_dir: str, results: list[engine.TaskResult], split: str, seed: int) -> None:
+    import os
+
+    os.makedirs(runs_dir, exist_ok=True)
+    rows = [r.__dict__ | {"steps": []} for r in results]
+    accuracy = sum(r.correct for r in results) / len(results)
+    with open(champion_path(runs_dir), "w") as f:
+        json.dump({"split": split, "seed": seed, "accuracy": accuracy, "results": rows}, f)

@@ -42,7 +42,10 @@ def cmd_run(args: argparse.Namespace) -> int:
     router = routers.load_router(args.manifest, os.path.dirname(args.manifest) or ".")
     tasks = suites.generate_split(args.split, args.seed)
     results = engine.run_split(router, tasks, pool, args.seed, args.split)
-    verdict = score.judge(results, bl.deserialize_results(base.best_single_results), base.oracle_accuracy)
+    # King-of-the-hill: beat the current champion if one exists, else the best-single floor.
+    runs_dir = os.path.dirname(args.baselines) or "."
+    incumbent = bl.load_incumbent(runs_dir, bl.deserialize_results(base.best_single_results))
+    verdict = score.judge(results, incumbent, base.oracle_accuracy)
 
     blob = {
         "manifest_sha256": routers.sha256_file(args.manifest),
