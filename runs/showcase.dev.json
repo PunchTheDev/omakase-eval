@@ -1,77 +1,93 @@
 {
  "split": "showcase",
  "seed": 7,
- "n_tasks": 120,
+ "n_tasks": 200,
  "contenders": {
-  "oc-stack (open weights)": {
-   "accuracy": 0.9083,
+  "omakase-stack (open weights)": {
+   "accuracy": 0.86,
    "per_suite": {
-    "reasoning": 0.9,
-    "math": 0.95,
-    "code_qa": 0.875
+    "reasoning": 0.775,
+    "math": 0.925,
+    "code_qa": 0.85,
+    "logic": 0.825,
+    "number_theory": 0.925
    },
-   "cost_per_task": 0.0387
+   "cost_per_task": 0.0368
   },
   "lab-alpha-mock": {
-   "accuracy": 0.825,
+   "accuracy": 0.865,
    "per_suite": {
     "reasoning": 0.825,
     "math": 0.825,
-    "code_qa": 0.825
+    "code_qa": 0.825,
+    "logic": 0.975,
+    "number_theory": 0.875
    },
    "cost_per_task": 0.2053
   },
   "lab-beta-mock": {
-   "accuracy": 0.775,
+   "accuracy": 0.74,
    "per_suite": {
     "reasoning": 0.875,
     "math": 0.625,
-    "code_qa": 0.825
+    "code_qa": 0.825,
+    "logic": 0.725,
+    "number_theory": 0.65
    },
-   "cost_per_task": 0.1644
+   "cost_per_task": 0.1645
   },
   "reasoner-mock": {
-   "accuracy": 0.7083,
+   "accuracy": 0.705,
    "per_suite": {
     "reasoning": 0.875,
     "math": 0.625,
-    "code_qa": 0.625
+    "code_qa": 0.625,
+    "logic": 0.825,
+    "number_theory": 0.575
    },
    "cost_per_task": 0.0412
   },
   "coder-mock": {
-   "accuracy": 0.6583,
+   "accuracy": 0.635,
    "per_suite": {
     "reasoning": 0.675,
     "math": 0.45,
-    "code_qa": 0.85
+    "code_qa": 0.85,
+    "logic": 0.6,
+    "number_theory": 0.6
    },
-   "cost_per_task": 0.0371
+   "cost_per_task": 0.037
   },
   "math-mock": {
-   "accuracy": 0.725,
+   "accuracy": 0.74,
    "per_suite": {
     "reasoning": 0.575,
     "math": 0.95,
-    "code_qa": 0.65
+    "code_qa": 0.65,
+    "logic": 0.6,
+    "number_theory": 0.925
    },
    "cost_per_task": 0.0329
   },
   "generalist-mock": {
-   "accuracy": 0.6583,
+   "accuracy": 0.64,
    "per_suite": {
     "reasoning": 0.6,
     "math": 0.725,
-    "code_qa": 0.65
+    "code_qa": 0.65,
+    "logic": 0.7,
+    "number_theory": 0.525
    },
    "cost_per_task": 0.0288
   },
   "small-mock": {
-   "accuracy": 0.4083,
+   "accuracy": 0.45,
    "per_suite": {
     "reasoning": 0.35,
     "math": 0.35,
-    "code_qa": 0.525
+    "code_qa": 0.525,
+    "logic": 0.4,
+    "number_theory": 0.625
    },
    "cost_per_task": 0.0041
   }
