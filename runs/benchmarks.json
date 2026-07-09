@@ -1,0 +1,48 @@
+{
+ "name": "gate-v1",
+ "structure": "public dev split (self-score) + private gate split (scores the crown, rotated each round) — same suite mix, generators, and grading on both; only the seed differs",
+ "suites": [
+  {
+   "suite": "reasoning",
+   "description": "sequence extrapolation — find the next term of a second-order recurrence (aₙ = aₙ₋₁·r + d·n), multiple choice",
+   "source": "procedural",
+   "graded": "objective",
+   "per_split": 60
+  },
+  {
+   "suite": "math",
+   "description": "multi-step quantitative word problems (inventory arithmetic), free-form numeric answer",
+   "source": "procedural",
+   "graded": "objective",
+   "per_split": 60
+  },
+  {
+   "suite": "code_qa",
+   "description": "predict the output of a short Python program — nested loops with a conditional, multiple choice",
+   "source": "procedural",
+   "graded": "objective",
+   "per_split": 60
+  },
+  {
+   "suite": "logic",
+   "description": "total-order constraint puzzles (“who is tallest?” from shuffled pairwise facts), multiple choice",
+   "source": "procedural",
+   "graded": "objective",
+   "per_split": 60
+  },
+  {
+   "suite": "number_theory",
+   "description": "gcd / lcm / modular exponentiation, free-form numeric answer",
+   "source": "procedural",
+   "graded": "objective",
+   "per_split": 60
+  },
+  {
+   "suite": "knowledge-holdout",
+   "description": "general-knowledge MCQ drawn as a secret per-round subset of a published question pool",
+   "source": "hidden-holdout",
+   "graded": "objective",
+   "per_split": 100
+  }
+ ]
+}
