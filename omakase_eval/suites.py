@@ -22,6 +22,36 @@ from math import gcd
 SUITES = ("reasoning", "math", "code_qa", "logic", "number_theory")
 LETTERS = "ABCD"
 
+# Bump when a generator's output distribution changes: every cached baseline
+# scored under the old generators is then invalid and must be recomputed.
+SUITE_VERSION = "suites@v1"
+
+# Contributor-facing: what each suite actually asks. The task *types* are public
+# (only the instances are hidden), so describing them precisely costs nothing and
+# is the difference between a miner guessing and a miner training.
+DESCRIPTIONS = {
+    "reasoning": "sequence extrapolation — find the next term of a second-order recurrence "
+                 "(aₙ = aₙ₋₁·r + d·n), multiple choice",
+    "math": "multi-step quantitative word problems (inventory arithmetic), free-form numeric answer",
+    "code_qa": "predict the output of a short Python program — nested loops with a conditional, "
+               "multiple choice",
+    "logic": "total-order constraint puzzles (“who is tallest?” from shuffled pairwise facts), "
+             "multiple choice",
+    "number_theory": "gcd / lcm / modular exponentiation, free-form numeric answer",
+}
+
+
+def split_fingerprint(split: str, seed: int) -> str:
+    """A publishable stamp binding an artifact to (split, seed) without leaking the seed.
+
+    Committed baselines must prove they were scored on the *current* split, but a
+    committed gate seed defeats the whole private-holdout design. Publishing this
+    digest instead is only safe because gate seeds are high-entropy (128-bit, see
+    the maintainer's seed store) — a low-entropy seed would be trivially
+    brute-forced back out of the digest.
+    """
+    return hashlib.sha256(f"{SUITE_VERSION}|{split}|{seed}".encode()).hexdigest()[:32]
+
 
 @dataclass(frozen=True)
 class Task:

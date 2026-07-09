@@ -31,15 +31,26 @@ class Completion:
 
 
 class Pool:
-    def __init__(self, workers: list[Worker], timeout_s: float = 60.0):
+    def __init__(self, workers: list[Worker], timeout_s: float = 60.0, version: str = ""):
         self.workers = {w.id: w for w in workers}
         self.timeout_s = timeout_s
+        # Identifies *which* pool a cached baseline was scored against. Swapping a
+        # worker silently invalidates every baseline; a declared version (or, absent
+        # one, a digest of the pinned worker set) makes that mismatch detectable.
+        self.version = version or self._digest()
+
+    def _digest(self) -> str:
+        import hashlib
+
+        spec = ";".join(f"{w.id}:{w.model}:{w.cost_per_1k}" for w in sorted(self.workers.values(), key=lambda w: w.id))
+        return "pool@" + hashlib.sha256(spec.encode()).hexdigest()[:12]
 
     @classmethod
     def from_config(cls, path: str) -> "Pool":
         with open(path) as f:
             cfg = json.load(f)
-        return cls([Worker(**w) for w in cfg["workers"]], timeout_s=cfg.get("timeout_s", 60.0))
+        return cls([Worker(**w) for w in cfg["workers"]], timeout_s=cfg.get("timeout_s", 60.0),
+                   version=cfg.get("version", ""))
 
     def chat(self, worker_id: str, system: str, user: str, metadata: dict | None = None) -> Completion:
         w = self.workers[worker_id]

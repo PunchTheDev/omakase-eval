@@ -16,7 +16,8 @@ digest-pinned runtime image minimal and auditable.
 | `routers` | TinyRouter (~10K-param linear policy), manifest loader with sha/size guards |
 | `stats` | Paired McNemar + bootstrap + published MDE |
 | `score` | Composite axes, uplift vs. best-single, oracle capture, verdicts |
-| `baselines` | Solo runs per worker, best-single bar, oracle ceiling |
+| `baselines` | Solo runs per worker, best-single bar, oracle ceiling; version-stamped so a stale one can't judge a rotated split |
+| `sandbox` | Isolated child process for untrusted Harness code — no answers on its path, no seed, no secrets |
 | `frontier` | Append-only hash-chained results ledger |
 | `showcase` | Champion stack vs. contenders — the /vs-labs data |
 

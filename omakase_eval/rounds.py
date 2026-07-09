@@ -47,23 +47,27 @@ def build_split(config: dict, split: str, seed: int) -> list[suites.Task]:
 def descriptor(config: dict) -> dict:
     """A public, leak-free description of the suite for the dashboard /benchmarks page.
 
-    Names sources, domains, counts, grading, and the un-gameability mechanism —
-    never any gate instances or answers.
+    Names sources, task types, counts and grading — never any gate instance or
+    answer. Describing the task *types* fully is deliberate: a contributor should
+    be able to train against the real distribution, since only the instances (and
+    the seed that produces them) are secret.
     """
     rows = []
     for src in config["sources"]:
         if src["kind"] == "procedural":
             for s in src.get("suites", suites.SUITES):
-                rows.append({"suite": s, "source": "procedural", "graded": "objective",
-                             "per_split": src.get("per_suite", 40),
-                             "ungameable": "fresh params each round — nothing to memorize"})
+                rows.append({"suite": s, "description": suites.DESCRIPTIONS.get(s, ""),
+                             "source": "procedural", "graded": "objective",
+                             "per_split": src.get("per_suite", 40)})
         else:
-            rows.append({"suite": src.get("name", "knowledge-holdout"), "source": "hidden-holdout",
-                         "graded": "objective", "per_split": src.get("count", "—"),
-                         "ungameable": "secret per-round subset of a public pool — needs the whole distribution, not a fixed slice"})
+            rows.append({"suite": src.get("name", "knowledge-holdout"),
+                         "description": "general-knowledge MCQ drawn as a secret per-round subset "
+                                        "of a published question pool",
+                         "source": "hidden-holdout",
+                         "graded": "objective", "per_split": src.get("count", "—")})
     return {
         "name": config.get("name", "gate"),
-        "structure": "public dev split (self-score) + private gate split (scores the crown, rotated each round)",
-        "difficulty_target": "best single worker ≈ 55–75% (max routing headroom)",
+        "structure": "public dev split (self-score) + private gate split (scores the crown, rotated "
+                     "each round) — same suite mix, generators, and grading on both; only the seed differs",
         "suites": rows,
     }

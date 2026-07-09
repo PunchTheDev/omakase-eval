@@ -35,17 +35,19 @@ def cmd_baselines(args: argparse.Namespace) -> int:
 
 def cmd_run(args: argparse.Namespace) -> int:
     pool = Pool.from_config(args.pool)
-    base = bl.load(args.baselines)
-    if (base.split, base.seed) != (args.split, args.seed):
-        print("baselines were computed for a different (split, seed)", file=sys.stderr)
+    runs_dir = os.path.dirname(args.baselines) or "."
+    try:
+        base = bl.load_for(runs_dir, args.split, args.seed, pool)
+        incumbent_floor = bl.deserialize_results(base.best_single_results)
+        # King-of-the-hill: beat the current champion if one exists, else the best-single floor.
+        incumbent = bl.load_incumbent(runs_dir, incumbent_floor, args.split, args.seed)
+    except bl.StaleBaseline as exc:
+        print(f"stale baseline: {exc}", file=sys.stderr)
         return 2
     router = routers.load_router(args.manifest, os.path.dirname(args.manifest) or ".")
     tasks = suites.generate_split(args.split, args.seed)
     results = engine.run_split(router, tasks, pool, args.seed, args.split)
-    # King-of-the-hill: beat the current champion if one exists, else the best-single floor.
-    runs_dir = os.path.dirname(args.baselines) or "."
     has_champion = os.path.exists(bl.champion_path(runs_dir))
-    incumbent = bl.load_incumbent(runs_dir, bl.deserialize_results(base.best_single_results))
     verdict = score.judge(results, incumbent, base.oracle_accuracy, gate_cost=has_champion)
 
     blob = {
