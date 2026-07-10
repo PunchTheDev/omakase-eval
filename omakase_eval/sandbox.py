@@ -68,6 +68,7 @@ class SandboxConfig:
     max_rpc_per_task: int = 64
     mem_bytes: int = 1 << 30
     cpu_seconds: int = 600
+    max_procs: int = 64
     max_line_bytes: int = 8 << 20
     image: str = "python:3.12-slim"
 
@@ -109,8 +110,13 @@ class _Channel:
         line, _, self.buf = self.buf.partition(b"\n")
         try:
             return json.loads(line)
-        except json.JSONDecodeError as exc:
-            raise _Forfeit(f"malformed frame: {exc}") from exc
+        except (json.JSONDecodeError, ValueError, RecursionError) as exc:
+            # A hostile child can put anything on the wire (it shares the process
+            # with _child.py, so the "private fds" are reachable via __main__ /
+            # /proc/self/fd — see sandbox_child). Deeply-nested JSON raises
+            # RecursionError, not JSONDecodeError; catch every parse failure and
+            # forfeit rather than letting it crash the whole split.
+            raise _Forfeit(f"malformed frame: {type(exc).__name__}") from exc
 
     def close(self) -> None:
         self.sel.close()
@@ -133,6 +139,14 @@ def _rlimits(cfg: SandboxConfig):
         resource.setrlimit(resource.RLIMIT_CPU, (cfg.cpu_seconds, cfg.cpu_seconds))
         resource.setrlimit(resource.RLIMIT_FSIZE, (0, 0))  # cannot write any regular file
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+        # Cap process count so a `while True: os.fork()` in process mode can't
+        # exhaust host PIDs (docker mode gets --pids-limit; this is its analogue).
+        # RLIMIT_AS is per-process and does not bound the process *count*.
+        try:
+            soft, hard = resource.getrlimit(resource.RLIMIT_NPROC)
+            resource.setrlimit(resource.RLIMIT_NPROC, (cfg.max_procs, min(hard, cfg.max_procs)))
+        except (ValueError, OSError):
+            pass  # not all platforms expose RLIMIT_NPROC
 
     return apply
 
@@ -204,7 +218,7 @@ class HarnessSandbox:
             "--read-only",                        # no writes anywhere
             "--cap-drop=ALL", "--security-opt=no-new-privileges",
             "--pids-limit=64",                    # no fork bombs
-            f"--memory={self.cfg.mem_bytes}", "--memory-swap=-1",
+            f"--memory={self.cfg.mem_bytes}", f"--memory-swap={self.cfg.mem_bytes}",  # =memory ⇒ swap disabled
             "--user=65534:65534",                 # nobody
             "-v", f"{self.root}:/sandbox:ro", "-w", "/sandbox",
             "-e", "PYTHONDONTWRITEBYTECODE=1", "-e", "PYTHONHASHSEED=0",
@@ -326,5 +340,12 @@ def run_harness_split(harness_dir: str, router, tasks: list[suites.Task], pool: 
     """Run every task through the sandboxed harness. Returns (results, forfeits)."""
     budget = budget or Budget()
     with HarnessSandbox(harness_dir, cfg) as sbx:
-        results = [sbx.run_task(router, t, pool, seed, split, budget) for t in tasks]
+        results = []
+        for t in tasks:
+            try:
+                results.append(sbx.run_task(router, t, pool, seed, split, budget))
+            except Exception as exc:  # noqa: BLE001 — last-resort net: one task dies, never the split
+                sbx.forfeits.append(f"{t.id}: unhandled {type(exc).__name__}")
+                results.append(TaskResult(t.id, t.suite, correct=False))
+                sbx._restart()
         return results, list(sbx.forfeits)

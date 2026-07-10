@@ -186,10 +186,25 @@ def render_prompt(task: Task, run_seed: int) -> str:
 
 
 def grade(task: Task, response: str, run_seed: int) -> bool:
-    """Content-based grading; a bare option letter is resolved through this run's shuffle."""
-    tail = response.strip().splitlines()[-1] if response.strip() else ""
-    if task.options and tail.strip().rstrip(".").upper() in LETTERS:
-        letter = tail.strip().rstrip(".").upper()
-        return dict(shuffled_options(task, run_seed)).get(letter, "") == task.answer
-    tokens = tail.replace(".", " ").replace(",", " ").split()
-    return task.answer in tokens or tail.strip() == task.answer
+    """Grade the final answer line — strictly, so a sprayed list of candidates can't win.
+
+    The templates require the answer on the final line by itself, and grading
+    holds miners to that. The rule is EXACT, never containment: an earlier
+    version accepted `task.answer in tokens`, which let a harness return every
+    plausible answer at once ("A B C D", or "-3000 … 3000") and match all of
+    them — 100% at zero model cost. Grading now demands the answer *be* the
+    final line, not merely appear in it:
+
+    - MCQ: a bare option letter (resolved through this run's shuffle), or the
+      final line equal to exactly one option's text.
+    - free-form: the final line's last token equals the answer. Last token, not
+      membership — a spray would have to END on the exact (unknown) answer.
+    """
+    tail = response.strip().splitlines()[-1].strip() if response.strip() else ""
+    norm = tail.rstrip(".").strip()
+    if task.options:
+        if len(norm) == 1 and norm.upper() in LETTERS:  # bare letter → resolve via shuffle
+            return dict(shuffled_options(task, run_seed)).get(norm.upper(), "") == task.answer
+        return norm == task.answer  # exact option text, not "contains an option"
+    toks = norm.replace(",", " ").split()
+    return bool(toks) and toks[-1] == task.answer

@@ -32,3 +32,25 @@ def test_grade_numeric():
     task = next(t for t in suites.generate_split("dev", 1) if not t.options)
     assert suites.grade(task, f"The answer is {task.answer}", run_seed=1)
     assert not suites.grade(task, "no idea", run_seed=1)
+
+
+def test_grade_rejects_answer_spray():
+    """The old `answer in tokens` rule let a harness win every task by returning
+    every candidate at once. Grading must reject candidate sprays."""
+    tasks = suites.generate_split("gate", 0xBEEF, per_suite=25)
+    numeric_spray = " ".join(str(n) for n in range(-3000, 3001))
+    won = 0
+    for t in tasks:
+        spray = " ".join(t.options) if t.options else numeric_spray  # all options / all ints on one line
+        won += suites.grade(t, spray, run_seed=0xBEEF)
+    assert won == 0, f"{won}/{len(tasks)} tasks won by spraying candidates — grading is exploitable"
+
+    # honest bare answers on the final line still pass
+    assert all(suites.grade(t, t.answer, run_seed=0xBEEF) for t in tasks)
+
+
+def test_grade_rejects_multitoken_numeric_membership():
+    """A numeric answer must be the final token, not merely present among many."""
+    task = next(t for t in suites.generate_split("dev", 1) if not t.options)
+    assert not suites.grade(task, f"maybe {task.answer} or 999999", run_seed=1)
+    assert suites.grade(task, f"...therefore {task.answer}", run_seed=1)

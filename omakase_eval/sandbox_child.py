@@ -40,8 +40,15 @@ sys.path[:] = [_ROOT] + [
 def _private_channel():
     """Duplicate the real pipes away, then blind fd 0/1 with /dev/null.
 
-    After this the harness can print() and read() freely: it hits /dev/null.
-    The protocol lives on fds the miner's code has no reference to.
+    After this the harness can print() and read() freely: it hits /dev/null, so
+    ordinary miner code cannot accidentally corrupt the protocol. This is a
+    hygiene measure, NOT a security boundary: miner code runs in this same
+    process, so it can still reach the dup'd fds (via `__main__` globals or
+    `/proc/self/fd`) and inject frames deliberately. That is tolerable because
+    the parent treats every frame as hostile — a spoofed `{"done": …}` still
+    can't guess the centrally-graded answer, and any malformed frame forfeits
+    one task instead of crashing the run (see `_Channel.recv`). Real containment
+    is the process/OS boundary, not fd hiding.
     """
     rfd, wfd = os.dup(0), os.dup(1)
     devnull_r = os.open(os.devnull, os.O_RDONLY)

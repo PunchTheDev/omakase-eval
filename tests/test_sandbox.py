@@ -244,6 +244,40 @@ def test_docker_mode_removes_the_network_and_the_filesystem(tmp_path):
     assert "uid=65534" in answer, "the harness ran as a privileged user"
 
 
+def test_nested_json_frame_forfeits_not_crashes(tmp_path, tasks):
+    """A RecursionError from json.loads must forfeit the task, not kill the run (H1)."""
+    h = write_harness(tmp_path, r'''
+        def run_task(router, view, pool, budget):
+            import __main__                       # the private write handle is reachable
+            __main__._TX.write("[" * 5000 + "\n") # deeply-nested → RecursionError in the parent
+            __main__._TX.flush()
+            return "unreachable"
+    ''')
+    results, forfeits = run(h, tasks)
+    assert len(results) == len(tasks), "one bad frame killed the whole split"
+    assert all(not r.correct for r in results)
+    assert forfeits, "the malformed frame should have been recorded as a forfeit"
+
+
+def test_fork_bomb_in_process_mode_is_capped(tmp_path, tasks):
+    """RLIMIT_NPROC stops a process-mode harness from exhausting host PIDs (M1)."""
+    h = write_harness(tmp_path, '''
+        def run_task(router, view, pool, budget):
+            import os
+            n = 0
+            try:
+                for _ in range(10000):
+                    if os.fork() == 0:
+                        os._exit(0)
+                    n += 1
+            except OSError:
+                pass  # rlimit hit — expected
+            return "forked-%d" % n
+    ''')
+    results, _ = run(h, tasks, timeout=15.0)
+    assert len(results) == len(tasks)  # the eval survived a fork attempt
+
+
 def test_broken_contract_is_a_sandbox_error_not_a_silent_zero(tmp_path, tasks):
     d = tmp_path / "harness"
     d.mkdir()

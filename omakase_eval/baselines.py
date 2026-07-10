@@ -105,22 +105,27 @@ def load_for(runs_dir: str, split: str, seed: int, pool: Pool) -> Baselines:
         )
     base = load(p)
     want = suites.split_fingerprint(split, seed)
+    # Require every stamp to be PRESENT and correct. An earlier version used
+    # `if base.seed_fingerprint and ...`, which a forged baseline bypassed by
+    # setting the stamp to "" — the falsy value skipped the whole check. A
+    # maintainer-produced baseline always carries all three stamps, so a missing
+    # one means the file is hand-crafted; refuse it.
     if base.split != split:
         raise StaleBaseline(f"baseline is for split {base.split!r}, scoring {split!r}")
-    if base.seed_fingerprint and base.seed_fingerprint != want:
+    if base.seed_fingerprint != want:
         raise StaleBaseline(
-            f"baseline for {split!r} was scored on a different seed (fingerprint mismatch) — "
-            "the split rotated; recompute the baseline before judging."
+            f"baseline for {split!r} has seed fingerprint {base.seed_fingerprint!r}, expected {want!r} — "
+            "wrong seed (or an unstamped/forged baseline); recompute on the trusted host."
         )
-    if base.pool_version and base.pool_version != pool.version:
+    if base.pool_version != pool.version:
         raise StaleBaseline(
             f"baseline was scored against pool {base.pool_version!r}, running {pool.version!r} — "
-            "the pool changed; recompute the baseline."
+            "the pool changed (or the stamp is missing); recompute the baseline."
         )
-    if base.suite_version and base.suite_version != suites.SUITE_VERSION:
+    if base.suite_version != suites.SUITE_VERSION:
         raise StaleBaseline(
             f"baseline was scored under {base.suite_version!r}, running {suites.SUITE_VERSION!r} — "
-            "the generators changed; recompute the baseline."
+            "the generators changed (or the stamp is missing); recompute the baseline."
         )
     return base
 
